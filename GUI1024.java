@@ -10,7 +10,7 @@ public class GUI1024 {
         GUI1024Panel panel = new GUI1024Panel();
         //panel.setFocusable(true);
         gui.getContentPane().add(panel);
-
+        System.out.println();
         gui.setSize(panel.getSize());
         gui.setVisible(true);
     }
