@@ -26,7 +26,7 @@ public class NumberGameArrayList implements NumberSlider {
             this.height = height;
             this.width = width;
             this.winningValue = winningValue;
-            undoList = new ArrayList<>();
+            undoList= new ArrayList<>();
         }else{
             throw new IllegalArgumentException();
         }
@@ -426,4 +426,44 @@ public class NumberGameArrayList implements NumberSlider {
 
 
     }
+    
+    public int getHighest(){
+        int temp=0;
+        for(int i=0;i<height;i++){
+            for(int j=0;j<width;j++){
+                if(temp<grid[i][j]){
+                    temp=grid[i][j];
+                }
+            }
+        }
+        return temp;
+    }
+    public int getUndoSize(){
+        if(undoList.isEmpty()){
+            return 0;
+        }
+        return undoList.size();
+    }
+    public void setWinningValue(int winningValue){
+        if((winningValue&winningValue-1)==0){
+            this.winningValue=winningValue;
+        }else{
+            throw new IllegalArgumentException();
+        }
+    }
+    public int getWinningValue(){
+        return winningValue;
+    }
+    public ArrayList<Cell> getEmptyCell(){
+        ArrayList<Cell> emptyCell = new ArrayList<>();
+        for(int i=0;i<height;i++){
+            for(int j=0;j<width;j++){
+                if(grid[i][j]==0){
+                    emptyCell.add(new Cell(i,j,0));
+                }
+            }
+        }
+        return emptyCell;
+    }
 }
+
