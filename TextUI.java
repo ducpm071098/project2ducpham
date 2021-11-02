@@ -81,7 +81,7 @@ public class TextUI {
                 "[U]ndo or [Q]uit? ");
         String userInput = scnr.next();
         while(!(userInput.equals("Q"))) {
-            renderBoard();
+           
             switch (userInput) {
                 case "W":
                     game.slide(SlideDirection.UP);
@@ -96,9 +96,14 @@ public class TextUI {
                     game.slide(SlideDirection.RIGHT);
                     break;
                 case "U":
-                    game.undo();
+                try{
+                    game.undo();}
+                    catch (Exception e){
+                        System.out.println("Cant Undo Beyond First Move");
+                    }
                     break;
             }
+            renderBoard();
             /* Almost done.... */
             switch (game.getStatus()) {
                 case IN_PROGRESS:
@@ -110,6 +115,9 @@ public class TextUI {
                 case USER_LOST:
                     System.out.println("Sorry....!");
                     break;
+            }
+            if(game.getStatus()==GameStatus.USER_WON||game.getStatus()==GameStatus.USER_LOST){
+                break;
             }
             System.out.print ("Slide direction (W, S, D, A), " +
                     "[U]ndo or [Q]uit? ");
