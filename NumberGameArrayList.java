@@ -1,17 +1,13 @@
 package Project2;
 
 import java.util.ArrayList;
-import java.util.Random;
-import java.util.Stack;
 
 public class NumberGameArrayList implements NumberSlider {
     private int [][] grid;
     private int height;
     private int width;
     private int winningValue;
-    private ArrayList<Cell> cells = new ArrayList<Cell>();
-    private ArrayList< int [][]> undoList = new ArrayList<>();
-    private Random numbers = new Random();
+    private ArrayList< int [][]> undoList;
 
     /**
      * Reset the game logic to handle a board of a given dimension
@@ -25,11 +21,12 @@ public class NumberGameArrayList implements NumberSlider {
      */
     @Override
     public void resizeBoard(int height, int width, int winningValue) {
-        if(winningValue > 0 && winningValue % 2 == 0) {
+        if(winningValue > 0 && height>0 && width>0 && (winningValue & winningValue-1) == 0) {
             this.grid = new int[height][width];
             this.height = height;
             this.width = width;
             this.winningValue = winningValue;
+            undoList = new ArrayList<>();
         }else{
             throw new IllegalArgumentException();
         }
@@ -48,6 +45,7 @@ public class NumberGameArrayList implements NumberSlider {
         }
         placeRandomValue();
         placeRandomValue();
+        undoList.clear();
     }
 
     /**
@@ -78,27 +76,25 @@ public class NumberGameArrayList implements NumberSlider {
      */
     @Override
     public Cell placeRandomValue() {
-        Random numbers = new Random();
-        int row = numbers.nextInt(height);
-        int column = numbers.nextInt(width);
-        int randomNumbers = numbers.nextInt(2);
-        int cellValue = 0;
-        if(randomNumbers == 0){
-            cellValue = 2;
-        }
-        if(randomNumbers == 1){
-            cellValue = 4;
-        }
-        if(grid != null){
-            while(grid[row][column] != 0){
-                row = numbers.nextInt(height);
-                column = numbers.nextInt(width);
+        ArrayList<int[]>empty = new ArrayList<>();
+        for(int i =0;i<height;i++){
+            for(int j =0; j<width;j++){
+                if(grid[i][j]==0){
+                    int[] a = {i,j};
+                    empty.add(a);
+                }
             }
-            grid[row][column] = cellValue;
+        }
+        if(empty.size()>0){
+            int randomPower = (int)(1+(Math.random()*2));
+            int randomNumber = (int)Math.pow(2,randomPower);
+            int randomIndex =(int)(Math.random()*empty.size());
+            int [] temp = empty.get(randomIndex);
+            grid[temp[0]][temp[1]]=randomNumber;
+            return new Cell (temp[0],temp[1],randomNumber);
         }else{
             throw new IllegalStateException();
         }
-        return new Cell(row,column ,cellValue);
     }
 
     /**
@@ -116,40 +112,44 @@ public class NumberGameArrayList implements NumberSlider {
         }
 
         if( dir.equals(SlideDirection.UP)){
-            this.slideUp(listTemp);
+            slideUp(listTemp);
         }
         if( dir.equals(SlideDirection.DOWN)){
-            this.slideDown(listTemp);
+            slideDown(listTemp);
         }
         if( dir.equals(SlideDirection.RIGHT)){
-            this.slideRight(listTemp);
+            slideRight(listTemp);
         }
         if( dir.equals(SlideDirection.LEFT)){
-            this.slideLeft(listTemp);
+            slideLeft(listTemp);
         }
 
         boolean flag = false;
 
         for (int row = 0; row < this.height; row++){
             for(int col = 0; col < this.width; col++){
-                if(grid[row][col] != listTemp.get(row*width + col)){
-                    undoList.add(grid);
+                if(grid[row][col] != listTemp.get((row*width)+ col)){
                     flag = true;
                     break;
                 }
             }
         }
 
-        if(flag){
-            undoList.add(grid);
+        if(flag==true){
+            int[][] a = new int[height][width];
+            for(int i=0;i<height;i++){
+                for(int j=0;j<width;j++){
+                    a[i][j]=grid[i][j];
+                }
+            }
+            undoList.add(a);
             for (int row = 0; row < this.height; row++){
                 for(int col = 0; col < this.width; col++){
-                    grid[row][col] = listTemp.get(row*width+col);
+                    grid[row][col] = listTemp.get((row*width)+col);
                 }
             }
             placeRandomValue();
         }
-
         return flag;
     }
 
@@ -160,12 +160,10 @@ public class NumberGameArrayList implements NumberSlider {
     @Override
     public ArrayList<Cell> getNonEmptyTiles() {
         ArrayList<Cell> list = new ArrayList<Cell>();
-        for (int row = 0; row < this.height; row++){
-            for (int col = 0; col < this.width; col++){
-                if(this.grid[row][col] != 0){
-                    Cell a = new Cell(row, col, grid[row][col]);
-                    list.add(a);
-                }
+        for(int i=0;i<height;i++){
+            for(int j=0;j<width;j++){
+                if(grid[i][j]!=0){
+                list.add(new Cell(i,j,grid[i][j]));}
             }
         }
         return list;
@@ -226,20 +224,25 @@ public class NumberGameArrayList implements NumberSlider {
      *
      * @throws IllegalStateException when undo is not possible
      */
-    @Override
-    public void undo(){
-        if(undoList.size() > 0) {
-            int[][] temp= undoList.get(undoList.size() - 1);
-            for(int i = 0; i<height; i++){
-                for(int j = 0; j < width; j++){
-                    grid[i][j] = temp[i][j];
+   
+        @Override
+        public void undo() {
+            //create temp array to hold last move
+            int[][] temp = new int[this.height][this.width];
+            if(undoList.size()-1<0){
+                throw new IllegalStateException();
+            }
+            //copy last move to board
+            temp = undoList.get((undoList.size())-1);
+            for(int i=0;i<temp.length;i++){
+                for(int j=0;j<temp[i].length;j++){
+                    grid[i][j]=temp[i][j];
                 }
             }
-            undoList.remove(undoList.size() - 1);
-        }else{
-            throw new IllegalStateException();
+            //remove last move
+            undoList.remove(undoList.size() -1);
         }
-    }
+    
 
     /**
      * slide the board up
